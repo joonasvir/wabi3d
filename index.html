@@ -1,42 +1,618 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wabi3D</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wabi3D — Generate 3D assets</title>
+  <meta name="description" content="Generate 3D-style asset PNGs with transparent backgrounds." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    *, *::before, *::after { box-sizing: border-box; }
+    :root {
+      --bg: #f4f4f4;
+      --panel: #ffffff;
+      --ink: #111111;
+      --ink-soft: #6b6b6b;
+      --line: #e7e7e7;
+      --accent: #111111;
+      --radius-lg: 28px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --shadow-soft: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04);
+    }
+    html, body { margin: 0; padding: 0; }
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
       min-height: 100vh;
+    }
+
+    /* Checkerboard for transparent preview */
+    .checker {
+      background-image:
+        linear-gradient(45deg, #ececec 25%, transparent 25%),
+        linear-gradient(-45deg, #ececec 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #ececec 75%),
+        linear-gradient(-45deg, transparent 75%, #ececec 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+      background-color: #f8f8f8;
+    }
+
+    .app {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 600;
+      font-size: 18px;
+      letter-spacing: -0.01em;
+    }
+    .brand-mark {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background:
+        radial-gradient(circle at 30% 30%, #fff 0%, #d8d8d8 70%),
+        #c8c8c8;
+      box-shadow: inset 0 -2px 4px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+    }
+    .header-links { color: var(--ink-soft); font-size: 14px; }
+    .header-links a { color: inherit; text-decoration: none; }
+    .header-links a:hover { color: var(--ink); }
+
+    /* Hero */
+    .hero { text-align: center; margin: 24px 0 40px; }
+    .hero h1 {
+      font-size: clamp(36px, 5vw, 56px);
+      line-height: 1.05;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+      margin: 0 0 12px;
+    }
+    .hero p {
+      color: var(--ink-soft);
+      font-size: 16px;
+      max-width: 520px;
+      margin: 0 auto;
+      line-height: 1.5;
+    }
+
+    /* Workspace */
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 880px) {
+      .workspace { grid-template-columns: 1fr; }
+    }
+
+    /* Preview */
+    .preview {
+      position: relative;
+      border-radius: var(--radius-lg);
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid var(--line);
+      transition: transform 0.2s ease;
+    }
+    .preview-inner {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .preview img {
+      max-width: 92%;
+      max-height: 92%;
+      object-fit: contain;
+      filter: drop-shadow(0 20px 30px rgba(0,0,0,0.12));
+      animation: pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes pop {
+      from { opacity: 0; transform: scale(0.92); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .placeholder {
+      text-align: center;
+      color: var(--ink-soft);
+      padding: 24px;
+    }
+    .placeholder .emoji {
+      font-size: 56px;
+      margin-bottom: 16px;
+      display: inline-block;
+      animation: float 4s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .placeholder h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--ink);
+      margin: 0 0 6px;
+    }
+    .placeholder p { margin: 0; font-size: 14px; }
+
+    /* Loading state */
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      color: var(--ink-soft);
+    }
+    .spinner {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, transparent 0deg, #111 360deg);
+      mask: radial-gradient(circle 18px at center, transparent 98%, black 100%);
+      -webkit-mask: radial-gradient(circle 18px at center, transparent 98%, black 100%);
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 14px; }
+    .loading-sub { font-size: 12px; color: #9b9b9b; }
+
+    /* Preview overlay actions */
+    .preview-actions {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      display: flex;
+      gap: 8px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .preview:hover .preview-actions { opacity: 1; }
+    .icon-btn {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid rgba(0,0,0,0.06);
+      backdrop-filter: blur(8px);
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: #111;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+    .icon-btn:hover { background: #fff; transform: translateY(-1px); }
+    .icon-btn:active { transform: translateY(0); }
+    .icon-btn svg { width: 16px; height: 16px; }
+
+    /* Controls panel */
+    .controls {
+      background: var(--panel);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 8px; }
+    .field-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    textarea, select {
+      font-family: inherit;
+      font-size: 15px;
+      color: var(--ink);
+      background: #f7f7f7;
+      border: 1px solid transparent;
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      width: 100%;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 88px;
+      line-height: 1.45;
+    }
+    textarea:focus, select:focus {
+      outline: none;
+      border-color: #111;
+      background: #fff;
+    }
+
+    /* Segmented control */
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: #f1f1f1;
+      border-radius: var(--radius-md);
+      padding: 4px;
+      gap: 4px;
+    }
+    .seg {
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink-soft);
+      padding: 8px 6px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .seg.active {
+      background: #ffffff;
+      color: var(--ink);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+    .seg:hover:not(.active) { color: var(--ink); }
+
+    /* Suggestions */
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .chip {
+      font-family: inherit;
+      font-size: 12px;
+      background: #f1f1f1;
+      border: none;
+      color: var(--ink-soft);
+      padding: 6px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .chip:hover {
+      background: #ebebeb;
+      color: var(--ink);
+    }
+
+    /* Primary button */
+    .generate-btn {
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      color: #ffffff;
+      background: #111111;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease, opacity 0.15s ease;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #fafafa;
-      color: #111;
+      gap: 8px;
     }
-    .container {
-      text-align: center;
-      padding: 40px;
+    .generate-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      background: #000;
     }
-    h1 {
-      font-size: 32px;
+    .generate-btn:active:not(:disabled) { transform: translateY(0); }
+    .generate-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .error {
+      background: #fef1f1;
+      border: 1px solid #f3cccc;
+      color: #a33;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    /* History */
+    .history {
+      margin-top: 28px;
+      display: none;
+    }
+    .history.active { display: block; }
+    .history h4 {
+      font-size: 12px;
       font-weight: 600;
-      margin-bottom: 12px;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 0 0 12px;
     }
-    p {
-      color: #666;
-      font-size: 16px;
+    .history-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 10px;
+    }
+    .history-item {
+      aspect-ratio: 1 / 1;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .history-item:hover { transform: translateY(-2px); }
+    .history-item img { width: 100%; height: 100%; object-fit: contain; }
+
+    footer {
+      text-align: center;
+      color: #b0b0b0;
+      font-size: 12px;
+      margin-top: 60px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Wabi3D</h1>
-    <p>Generate 3D-style asset PNGs with transparent backgrounds using OpenAI's image API.</p>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="brand-mark"></div>
+        Wabi3D
+      </div>
+      <div class="header-links">
+        <a href="https://protos.joonasvirtanen.com" target="_blank" rel="noopener">All protos →</a>
+      </div>
+    </header>
+
+    <section class="hero">
+      <h1>Generate 3D mini-app assets</h1>
+      <p>Describe an object. Get a glossy, transparent-background PNG ready to drop into anything.</p>
+    </section>
+
+    <main class="workspace">
+      <div class="preview checker" id="preview">
+        <div class="preview-inner" id="previewInner">
+          <div class="placeholder">
+            <span class="emoji">🌸</span>
+            <h3>Your asset will appear here</h3>
+            <p>Try something like &ldquo;disco ball&rdquo; or &ldquo;pixel cursor&rdquo;.</p>
+          </div>
+        </div>
+        <div class="preview-actions" id="previewActions" style="display:none;">
+          <button class="icon-btn" id="copyBtn" title="Copy image">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+          <button class="icon-btn" id="downloadBtn" title="Download PNG">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <aside class="controls">
+        <div class="field">
+          <label class="field-label" for="prompt">Subject</label>
+          <textarea id="prompt" placeholder="A glossy disco ball with rainbow reflections"></textarea>
+          <div class="suggestions">
+            <button type="button" class="chip">disco ball</button>
+            <button type="button" class="chip">pixel mouse cursor</button>
+            <button type="button" class="chip">smiley flower</button>
+            <button type="button" class="chip">retro game controller</button>
+            <button type="button" class="chip">@ symbol</button>
+            <button type="button" class="chip">vinyl record</button>
+            <button type="button" class="chip">camera</button>
+            <button type="button" class="chip">star</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Size</label>
+          <div class="segmented" id="sizeSeg">
+            <button type="button" class="seg active" data-size="1024x1024">Square</button>
+            <button type="button" class="seg" data-size="1024x1536">Portrait</button>
+            <button type="button" class="seg" data-size="1536x1024">Landscape</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Quality</label>
+          <div class="segmented" id="qualitySeg" style="grid-template-columns: repeat(3, 1fr);">
+            <button type="button" class="seg" data-quality="low">Low</button>
+            <button type="button" class="seg" data-quality="medium">Medium</button>
+            <button type="button" class="seg active" data-quality="high">High</button>
+          </div>
+        </div>
+
+        <div id="errorBox"></div>
+
+        <button class="generate-btn" id="generateBtn">
+          <span id="btnLabel">Generate</span>
+        </button>
+      </aside>
+    </main>
+
+    <section class="history" id="historySection">
+      <h4>History</h4>
+      <div class="history-grid" id="historyGrid"></div>
+    </section>
+
+    <footer>
+      Powered by gpt-image-1 · <span id="model">OpenAI</span>
+    </footer>
   </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const promptEl = $('prompt');
+    const previewInner = $('previewInner');
+    const previewActions = $('previewActions');
+    const generateBtn = $('generateBtn');
+    const btnLabel = $('btnLabel');
+    const errorBox = $('errorBox');
+    const downloadBtn = $('downloadBtn');
+    const copyBtn = $('copyBtn');
+    const historySection = $('historySection');
+    const historyGrid = $('historyGrid');
+
+    let currentSize = '1024x1024';
+    let currentQuality = 'high';
+    let currentImage = null;
+    const history = [];
+
+    // Segmented controls
+    function wireSegmented(id, onChange) {
+      const seg = $(id);
+      seg.addEventListener('click', (e) => {
+        const btn = e.target.closest('.seg');
+        if (!btn) return;
+        seg.querySelectorAll('.seg').forEach((s) => s.classList.remove('active'));
+        btn.classList.add('active');
+        onChange(btn);
+      });
+    }
+    wireSegmented('sizeSeg', (btn) => { currentSize = btn.dataset.size; });
+    wireSegmented('qualitySeg', (btn) => { currentQuality = btn.dataset.quality; });
+
+    // Suggestion chips
+    document.querySelectorAll('.chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        promptEl.value = chip.textContent;
+        promptEl.focus();
+      });
+    });
+
+    // Cmd/Ctrl+Enter to generate
+    promptEl.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        generate();
+      }
+    });
+
+    generateBtn.addEventListener('click', generate);
+
+    async function generate() {
+      const prompt = promptEl.value.trim();
+      if (!prompt) {
+        promptEl.focus();
+        return;
+      }
+
+      errorBox.innerHTML = '';
+      generateBtn.disabled = true;
+      btnLabel.textContent = 'Generating…';
+      previewActions.style.display = 'none';
+      previewInner.innerHTML = `
+        <div class="loading">
+          <div class="spinner"></div>
+          <div class="loading-text">Rendering your asset…</div>
+          <div class="loading-sub">High-quality renders can take 20–40s</div>
+        </div>
+      `;
+
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, size: currentSize, quality: currentQuality }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'Generation failed');
+        }
+        showImage(data.imageData, prompt);
+      } catch (err) {
+        previewInner.innerHTML = `
+          <div class="placeholder">
+            <span class="emoji">⚠️</span>
+            <h3>Something went wrong</h3>
+            <p>Try a different prompt or retry.</p>
+          </div>
+        `;
+        errorBox.innerHTML = `<div class="error">${escapeHtml(err.message)}</div>`;
+      } finally {
+        generateBtn.disabled = false;
+        btnLabel.textContent = 'Generate';
+      }
+    }
+
+    function showImage(dataUrl, prompt) {
+      currentImage = { dataUrl, prompt };
+      previewInner.innerHTML = `<img src="${dataUrl}" alt="${escapeHtml(prompt)}" />`;
+      previewActions.style.display = 'flex';
+
+      // Add to history (front)
+      history.unshift(currentImage);
+      if (history.length > 12) history.pop();
+      renderHistory();
+    }
+
+    function renderHistory() {
+      if (history.length === 0) return;
+      historySection.classList.add('active');
+      historyGrid.innerHTML = history
+        .map(
+          (item, i) =>
+            `<div class="history-item checker" data-i="${i}"><img src="${item.dataUrl}" alt="${escapeHtml(item.prompt)}" /></div>`
+        )
+        .join('');
+      historyGrid.querySelectorAll('.history-item').forEach((el) => {
+        el.addEventListener('click', () => {
+          const item = history[Number(el.dataset.i)];
+          if (item) {
+            currentImage = item;
+            previewInner.innerHTML = `<img src="${item.dataUrl}" alt="${escapeHtml(item.prompt)}" />`;
+            previewActions.style.display = 'flex';
+            promptEl.value = item.prompt;
+          }
+        });
+      });
+    }
+
+    downloadBtn.addEventListener('click', () => {
+      if (!currentImage) return;
+      const a = document.createElement('a');
+      a.href = currentImage.dataUrl;
+      const slug = currentImage.prompt
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+        .slice(0, 40);
+      a.download = `wabi3d-${slug || 'asset'}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      if (!currentImage) return;
+      try {
+        const blob = await (await fetch(currentImage.dataUrl)).blob();
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        copyBtn.style.background = '#d4f5d4';
+        setTimeout(() => (copyBtn.style.background = ''), 600);
+      } catch (e) {
+        console.warn('Copy failed', e);
+      }
+    });
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+      }[c]));
+    }
+  </script>
 </body>
 </html>
