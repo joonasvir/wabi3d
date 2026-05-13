@@ -354,7 +354,22 @@
       color: var(--ink);
       box-shadow: 0 1px 2px rgba(0,0,0,0.08);
     }
-    .mode-wrap { text-align: center; }
+    .mode-wrap {
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .toggle-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-right: 2px;
+    }
 
     /* Batch view */
     .batch-view { display: none; }
@@ -580,9 +595,13 @@
     </section>
 
     <div class="mode-wrap">
-      <div class="mode-toggle" role="tablist">
+      <div class="mode-toggle" role="tablist" id="modeToggle">
         <button class="active" data-mode="single" role="tab">Single</button>
         <button data-mode="batch" role="tab">Batch</button>
+      </div>
+      <div class="mode-toggle" role="tablist" id="styleToggle">
+        <button class="active" data-style="plastic" role="tab">Plastic</button>
+        <button data-style="glass" role="tab">Glass</button>
       </div>
     </div>
 
@@ -632,7 +651,7 @@
           <div class="placeholder">
             <span class="emoji">🌸</span>
             <h3>Your asset will appear here</h3>
-            <p>Try something like &ldquo;disco ball&rdquo; or &ldquo;pixel cursor&rdquo;.</p>
+            <p>Pick a style above, then describe an object — or tap a suggestion.</p>
           </div>
         </div>
         <div class="preview-actions" id="previewActions" style="display:none;">
@@ -712,8 +731,22 @@
 
     let currentSize = '1024x1024';
     let currentQuality = 'high';
+    let currentStyle = 'plastic';
     let currentImage = null;
     const history = [];
+
+    const PLACEHOLDERS = {
+      plastic: 'A glossy disco ball with rainbow reflections',
+      glass: 'A translucent heart with pink-to-purple iridescent shimmer',
+    };
+    const BATCH_PLACEHOLDERS = {
+      plastic: 'love\nmusic\ndeadline\nideas\ncoffee',
+      glass: 'love\nmoney\nmusic\nideas\nhome',
+    };
+    const SUGGESTIONS = {
+      plastic: ['disco ball', 'pixel mouse cursor', 'smiley flower', 'retro game controller', '@ symbol', 'vinyl record', 'camera', 'star'],
+      glass: ['glass dollar sign', 'iridescent heart', 'crystal lightbulb', 'clear iMac G3', 'frosted house', 'prismatic gem', 'glass game controller', 'holographic CD'],
+    };
 
     // Segmented controls
     function wireSegmented(id, onChange) {
@@ -729,11 +762,31 @@
     wireSegmented('sizeSeg', (btn) => { currentSize = btn.dataset.size; });
     wireSegmented('qualitySeg', (btn) => { currentQuality = btn.dataset.quality; });
 
-    // Suggestion chips
-    document.querySelectorAll('.chip').forEach((chip) => {
-      chip.addEventListener('click', () => {
-        promptEl.value = chip.textContent;
-        promptEl.focus();
+    // Suggestion chips (delegated so we can re-render them per style)
+    const suggestionsEl = document.querySelector('.suggestions');
+    function renderSuggestions() {
+      suggestionsEl.innerHTML = SUGGESTIONS[currentStyle]
+        .map((s) => `<button type="button" class="chip">${s}</button>`)
+        .join('');
+    }
+    renderSuggestions();
+    suggestionsEl.addEventListener('click', (e) => {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      promptEl.value = chip.textContent;
+      promptEl.focus();
+    });
+
+    // Style toggle
+    const styleButtons = document.querySelectorAll('#styleToggle button');
+    styleButtons.forEach((b) => {
+      b.addEventListener('click', () => {
+        styleButtons.forEach((x) => x.classList.remove('active'));
+        b.classList.add('active');
+        currentStyle = b.dataset.style;
+        promptEl.placeholder = PLACEHOLDERS[currentStyle];
+        batchPrompt.placeholder = BATCH_PLACEHOLDERS[currentStyle];
+        renderSuggestions();
       });
     });
 
@@ -770,7 +823,7 @@
         const res = await fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt, size: currentSize, quality: currentQuality }),
+          body: JSON.stringify({ prompt, size: currentSize, quality: currentQuality, style: currentStyle }),
         });
         const data = await res.json();
         if (!res.ok || !data.success) {
@@ -1029,7 +1082,7 @@
         const res = await fetch('/api/ideate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ concepts }),
+          body: JSON.stringify({ concepts, style: currentStyle }),
         });
         const data = await res.json();
         if (!res.ok || !data.success) throw new Error(data.error || 'Ideation failed');
@@ -1068,6 +1121,7 @@
               prompt: item.description,
               size: batchSize,
               quality: batchQuality,
+              style: currentStyle,
             }),
           });
           const data = await res.json();
