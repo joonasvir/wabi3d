@@ -327,6 +327,170 @@
       line-height: 1.4;
     }
 
+    /* Mode toggle */
+    .mode-toggle {
+      display: inline-flex;
+      background: #ececec;
+      border-radius: 999px;
+      padding: 4px;
+      gap: 2px;
+      margin: 0 auto 24px;
+    }
+    .mode-toggle button {
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink-soft);
+      background: transparent;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .mode-toggle button.active {
+      background: #ffffff;
+      color: var(--ink);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    }
+    .mode-wrap { text-align: center; }
+
+    /* Batch view */
+    .batch-view { display: none; }
+    .batch-view.active { display: block; }
+    .single-view.hidden { display: none; }
+
+    .batch-bar {
+      background: var(--panel);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 220px;
+      gap: 16px;
+      align-items: stretch;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 880px) {
+      .batch-bar { grid-template-columns: 1fr; }
+    }
+    .batch-bar textarea {
+      min-height: 140px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .batch-side {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .batch-side .field { gap: 6px; }
+    .batch-side .field-label { font-size: 11px; }
+
+    .batch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+    }
+    .batch-tile {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-soft);
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .batch-tile:hover { transform: translateY(-2px); }
+    .batch-tile img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      animation: pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .tile-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px;
+      text-align: center;
+      color: var(--ink-soft);
+      font-size: 12px;
+      background: rgba(248,248,248,0.6);
+      backdrop-filter: blur(4px);
+    }
+    .tile-overlay.transparent {
+      background: transparent;
+      backdrop-filter: none;
+    }
+    .tile-spinner {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, transparent 0deg, #111 360deg);
+      mask: radial-gradient(circle 11px at center, transparent 98%, black 100%);
+      -webkit-mask: radial-gradient(circle 11px at center, transparent 98%, black 100%);
+      animation: spin 0.9s linear infinite;
+    }
+    .tile-label {
+      position: absolute;
+      left: 8px;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(6px);
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 11px;
+      color: var(--ink);
+      font-weight: 500;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      pointer-events: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .batch-tile:hover .tile-label { opacity: 1; }
+    .batch-tile.error {
+      background: #fef1f1;
+      border-color: #f3cccc;
+    }
+    .batch-tile.error .tile-overlay { color: #a33; }
+
+    .tile-download {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.92);
+      border: 1px solid rgba(0,0,0,0.06);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      color: var(--ink);
+    }
+    .batch-tile:hover .tile-download { opacity: 1; }
+    .tile-download svg { width: 14px; height: 14px; }
+
+    .batch-status {
+      font-size: 12px;
+      color: var(--ink-soft);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .batch-status.hidden { display: none; }
+
     /* History */
     .history {
       margin-top: 28px;
@@ -382,7 +546,48 @@
       <p>Describe an object. Get a glossy, transparent-background PNG ready to drop into anything.</p>
     </section>
 
-    <main class="workspace">
+    <div class="mode-wrap">
+      <div class="mode-toggle" role="tablist">
+        <button class="active" data-mode="single" role="tab">Single</button>
+        <button data-mode="batch" role="tab">Batch</button>
+      </div>
+    </div>
+
+    <section class="batch-view" id="batchView">
+      <div class="batch-bar">
+        <div class="field">
+          <label class="field-label" for="batchPrompt">Concepts (one per line)</label>
+          <textarea id="batchPrompt" placeholder="love&#10;music&#10;deadline&#10;ideas&#10;coffee"></textarea>
+        </div>
+        <div class="batch-side">
+          <div class="field">
+            <label class="field-label">Size</label>
+            <div class="segmented" id="batchSizeSeg">
+              <button type="button" class="seg active" data-size="1024x1024">Square</button>
+              <button type="button" class="seg" data-size="1024x1536">Portrait</button>
+              <button type="button" class="seg" data-size="1536x1024">Landscape</button>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label">Quality</label>
+            <div class="segmented" id="batchQualitySeg">
+              <button type="button" class="seg" data-quality="low">Low</button>
+              <button type="button" class="seg active" data-quality="medium">Medium</button>
+              <button type="button" class="seg" data-quality="high">High</button>
+            </div>
+          </div>
+          <button class="generate-btn" id="batchGenerateBtn">
+            <span id="batchBtnLabel">Ideate & generate</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="batch-status hidden" id="batchStatus"></div>
+      <div id="batchErrorBox"></div>
+      <div class="batch-grid" id="batchGrid"></div>
+    </section>
+
+    <main class="workspace single-view" id="singleView">
       <div class="preview checker" id="preview">
         <div class="preview-inner" id="previewInner">
           <div class="placeholder">
@@ -612,6 +817,227 @@
       return String(s).replace(/[&<>"']/g, (c) => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
       }[c]));
+    }
+
+    /* ---------- Mode toggle ---------- */
+    const singleView = $('singleView');
+    const batchView = $('batchView');
+    const modeButtons = document.querySelectorAll('.mode-toggle button');
+    modeButtons.forEach((b) => {
+      b.addEventListener('click', () => {
+        modeButtons.forEach((x) => x.classList.remove('active'));
+        b.classList.add('active');
+        const mode = b.dataset.mode;
+        if (mode === 'batch') {
+          singleView.classList.add('hidden');
+          batchView.classList.add('active');
+        } else {
+          singleView.classList.remove('hidden');
+          batchView.classList.remove('active');
+        }
+      });
+    });
+
+    /* ---------- Batch state ---------- */
+    let batchSize = '1024x1024';
+    let batchQuality = 'medium';
+    wireSegmented('batchSizeSeg', (btn) => { batchSize = btn.dataset.size; });
+    wireSegmented('batchQualitySeg', (btn) => { batchQuality = btn.dataset.quality; });
+
+    const batchPrompt = $('batchPrompt');
+    const batchGenerateBtn = $('batchGenerateBtn');
+    const batchBtnLabel = $('batchBtnLabel');
+    const batchStatus = $('batchStatus');
+    const batchErrorBox = $('batchErrorBox');
+    const batchGrid = $('batchGrid');
+
+    batchPrompt.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        runBatch();
+      }
+    });
+    batchGenerateBtn.addEventListener('click', runBatch);
+
+    function parseConcepts(text) {
+      return text
+        .split(/[\n,]+/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+
+    function renderBatchTiles(concepts) {
+      batchGrid.innerHTML = concepts
+        .map(
+          (c, i) => `
+          <div class="batch-tile checker" data-i="${i}">
+            <div class="tile-overlay" id="tile-overlay-${i}">
+              <div class="tile-spinner"></div>
+              <div>Ideating "${escapeHtml(c)}"…</div>
+            </div>
+          </div>`
+        )
+        .join('');
+    }
+
+    function tileShowLoading(i, label) {
+      const tile = batchGrid.querySelector(`[data-i="${i}"]`);
+      if (!tile) return;
+      tile.innerHTML = `
+        <div class="tile-overlay">
+          <div class="tile-spinner"></div>
+          <div>${escapeHtml(label)}</div>
+        </div>`;
+    }
+
+    function tileShowImage(i, dataUrl, concept, description) {
+      const tile = batchGrid.querySelector(`[data-i="${i}"]`);
+      if (!tile) return;
+      const slug = concept
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+        .slice(0, 40);
+      tile.innerHTML = `
+        <img src="${dataUrl}" alt="${escapeHtml(concept)}" />
+        <button class="tile-download" title="Download PNG" data-href="${dataUrl}" data-name="wabi3d-${slug || 'asset'}.png">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+        <div class="tile-label">${escapeHtml(concept)} — ${escapeHtml(description)}</div>
+      `;
+      tile._dataUrl = dataUrl;
+      tile._concept = concept;
+    }
+
+    function tileShowError(i, concept, err) {
+      const tile = batchGrid.querySelector(`[data-i="${i}"]`);
+      if (!tile) return;
+      tile.classList.add('error');
+      tile.innerHTML = `
+        <div class="tile-overlay">
+          <div style="font-size:22px;">⚠️</div>
+          <div style="font-weight:500;">${escapeHtml(concept)}</div>
+          <div style="font-size:11px;">${escapeHtml(err)}</div>
+        </div>`;
+    }
+
+    // Tile click → open in single-view preview; download button handled separately
+    batchGrid.addEventListener('click', (e) => {
+      const dl = e.target.closest('.tile-download');
+      if (dl) {
+        e.stopPropagation();
+        const a = document.createElement('a');
+        a.href = dl.dataset.href;
+        a.download = dl.dataset.name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        return;
+      }
+      const tile = e.target.closest('.batch-tile');
+      if (tile && tile._dataUrl) {
+        showImage(tile._dataUrl, tile._concept);
+        promptEl.value = tile._concept;
+        modeButtons.forEach((x) => x.classList.remove('active'));
+        document.querySelector('[data-mode="single"]').classList.add('active');
+        singleView.classList.remove('hidden');
+        batchView.classList.remove('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+
+    // Limited-concurrency runner
+    async function runWithConcurrency(items, concurrency, worker) {
+      let cursor = 0;
+      const runners = Array(Math.min(concurrency, items.length))
+        .fill(0)
+        .map(async () => {
+          while (true) {
+            const i = cursor++;
+            if (i >= items.length) return;
+            await worker(items[i], i);
+          }
+        });
+      await Promise.all(runners);
+    }
+
+    async function runBatch() {
+      const concepts = parseConcepts(batchPrompt.value);
+      batchErrorBox.innerHTML = '';
+
+      if (concepts.length === 0) {
+        batchPrompt.focus();
+        return;
+      }
+      if (concepts.length > 24) {
+        batchErrorBox.innerHTML = `<div class="error">Max 24 concepts at once. You have ${concepts.length}.</div>`;
+        return;
+      }
+
+      batchGenerateBtn.disabled = true;
+      batchBtnLabel.textContent = 'Working…';
+      batchStatus.classList.remove('hidden');
+      batchStatus.textContent = `Ideating ${concepts.length} concept${concepts.length === 1 ? '' : 's'}…`;
+      renderBatchTiles(concepts);
+
+      // Step 1: ideate all
+      let items;
+      try {
+        const res = await fetch('/api/ideate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ concepts }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Ideation failed');
+        items = data.items;
+      } catch (err) {
+        batchErrorBox.innerHTML = `<div class="error">Ideation failed: ${escapeHtml(err.message)}</div>`;
+        batchStatus.classList.add('hidden');
+        batchGenerateBtn.disabled = false;
+        batchBtnLabel.textContent = 'Ideate & generate';
+        items = concepts.map((c) => ({ concept: c, description: c }));
+        // continue with raw concepts so user still gets images
+      }
+
+      // Step 2: generate each (concurrency 3)
+      let done = 0;
+      const total = items.length;
+      const updateStatus = () => {
+        batchStatus.textContent = `Generating images — ${done}/${total} done`;
+      };
+      updateStatus();
+
+      await runWithConcurrency(items, 3, async (item, i) => {
+        tileShowLoading(i, `Rendering "${item.concept}"…`);
+        try {
+          const res = await fetch('/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              prompt: item.description,
+              size: batchSize,
+              quality: batchQuality,
+            }),
+          });
+          const data = await res.json();
+          if (!res.ok || !data.success) throw new Error(data.error || 'Generation failed');
+          tileShowImage(i, data.imageData, item.concept, item.description);
+          // Also push to shared history
+          history.unshift({ dataUrl: data.imageData, prompt: item.concept });
+          if (history.length > 24) history.pop();
+          renderHistory();
+        } catch (err) {
+          tileShowError(i, item.concept, err.message);
+        } finally {
+          done++;
+          updateStatus();
+        }
+      });
+
+      batchStatus.textContent = `Done. ${done}/${total} generated.`;
+      batchGenerateBtn.disabled = false;
+      batchBtnLabel.textContent = 'Ideate & generate';
     }
   </script>
 </body>

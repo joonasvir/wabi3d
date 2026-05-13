@@ -5,6 +5,9 @@
   "functions": {
     "api/generate.js": {
       "maxDuration": 60
+    },
+    "api/ideate.js": {
+      "maxDuration": 30
     }
   }
 }
