@@ -376,6 +376,215 @@
     .batch-view.active { display: block; }
     .single-view.hidden { display: none; }
 
+    /* Library view */
+    .library-view { display: none; }
+    .library-view.active { display: block; }
+
+    .library-bar {
+      background: var(--panel);
+      border-radius: var(--radius-lg);
+      padding: 14px 18px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .search-wrap {
+      position: relative;
+      flex: 1 1 280px;
+      min-width: 200px;
+    }
+    .search-wrap input {
+      font-family: inherit;
+      font-size: 15px;
+      width: 100%;
+      padding: 10px 12px 10px 36px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #f7f7f7;
+      transition: all 0.15s ease;
+    }
+    .search-wrap input:focus {
+      outline: none;
+      border-color: #111;
+      background: #fff;
+    }
+    .search-wrap .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px; height: 16px;
+      color: #999;
+    }
+    .filter-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .filter-chip {
+      font-family: inherit;
+      font-size: 12px;
+      background: #f1f1f1;
+      border: none;
+      color: var(--ink-soft);
+      padding: 7px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .filter-chip:hover { background: #ebebeb; color: var(--ink); }
+    .filter-chip.active {
+      background: #111;
+      color: #fff;
+    }
+    .library-count {
+      font-size: 12px;
+      color: var(--ink-soft);
+      margin-left: auto;
+    }
+
+    .library-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px;
+    }
+    .library-tile {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .library-tile:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-soft);
+    }
+    .library-tile img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .library-tile .tile-label {
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      bottom: 6px;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(6px);
+      border-radius: 8px;
+      padding: 5px 8px;
+      font-size: 11px;
+      color: var(--ink);
+      font-weight: 500;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .library-tile:hover .tile-label { opacity: 1; }
+    .library-tile .style-badge {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.92);
+      color: var(--ink);
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+    .library-tile:hover .style-badge { opacity: 1; }
+
+    .library-empty {
+      text-align: center;
+      padding: 80px 24px;
+      color: var(--ink-soft);
+    }
+    .library-empty .emoji {
+      font-size: 48px;
+      margin-bottom: 16px;
+      display: inline-block;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 100;
+      animation: fadeIn 0.15s ease;
+    }
+    .modal-backdrop.active { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      max-width: 720px;
+      width: 100%;
+      max-height: 90vh;
+      overflow: auto;
+      padding: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .modal-image {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: var(--radius-md);
+      margin-bottom: 18px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-image img {
+      max-width: 92%;
+      max-height: 92%;
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1));
+    }
+    .modal-meta { display: flex; flex-direction: column; gap: 10px; }
+    .modal-concept { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+    .modal-desc { color: var(--ink-soft); font-size: 14px; line-height: 1.5; }
+    .modal-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+    .modal-tag {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      background: #f1f1f1;
+      padding: 4px 10px;
+      border-radius: 999px;
+      color: var(--ink-soft);
+    }
+    .modal-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .modal-btn {
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      color: var(--ink);
+    }
+    .modal-btn:hover { background: #f7f7f7; }
+    .modal-btn.primary {
+      background: #111;
+      color: #fff;
+      border-color: #111;
+    }
+    .modal-btn.primary:hover { background: #000; }
+
     .batch-bar {
       background: var(--panel);
       border-radius: var(--radius-lg);
@@ -598,6 +807,7 @@
       <div class="mode-toggle" role="tablist" id="modeToggle">
         <button class="active" data-mode="single" role="tab">Single</button>
         <button data-mode="batch" role="tab">Batch</button>
+        <button data-mode="library" role="tab">Library</button>
       </div>
       <div class="mode-toggle" role="tablist" id="styleToggle">
         <button class="active" data-style="plastic" role="tab">Plastic</button>
@@ -706,10 +916,43 @@
       </aside>
     </main>
 
+    <section class="library-view" id="libraryView">
+      <div class="library-bar">
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="librarySearch" placeholder="Search assets…" autocomplete="off" />
+        </div>
+        <div class="filter-chips" id="libraryFilters">
+          <button class="filter-chip active" data-filter="all">All</button>
+          <button class="filter-chip" data-filter="plastic">Plastic</button>
+          <button class="filter-chip" data-filter="glass">Glass</button>
+        </div>
+        <div class="library-count" id="libraryCount"></div>
+      </div>
+      <div id="libraryGridWrap"></div>
+    </section>
+
     <section class="history" id="historySection">
-      <h4>History</h4>
+      <h4>This session</h4>
       <div class="history-grid" id="historyGrid"></div>
     </section>
+
+    <div class="modal-backdrop" id="modal">
+      <div class="modal" id="modalCard">
+        <div class="modal-image checker" id="modalImage"></div>
+        <div class="modal-meta">
+          <div class="modal-concept" id="modalConcept"></div>
+          <div class="modal-desc" id="modalDesc"></div>
+          <div class="modal-tags" id="modalTags"></div>
+          <div class="modal-actions">
+            <button class="modal-btn primary" id="modalDownload">Download PNG</button>
+            <button class="modal-btn" id="modalCopy">Copy image</button>
+            <button class="modal-btn" id="modalRegen">Regenerate</button>
+            <button class="modal-btn" id="modalClose" style="margin-left:auto;">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <footer>
       Powered by gpt-image-1 · <span id="model">OpenAI</span>
@@ -830,6 +1073,7 @@
           throw new Error(data.error || 'Generation failed');
         }
         showImage(data.imageData, prompt);
+        invalidateLibrary();
       } catch (err) {
         previewInner.innerHTML = `
           <div class="placeholder">
@@ -914,21 +1158,29 @@
     /* ---------- Mode toggle ---------- */
     const singleView = $('singleView');
     const batchView = $('batchView');
-    const modeButtons = document.querySelectorAll('.mode-toggle button');
+    const libraryView = $('libraryView');
+    const modeButtons = document.querySelectorAll('#modeToggle button');
     modeButtons.forEach((b) => {
       b.addEventListener('click', () => {
         modeButtons.forEach((x) => x.classList.remove('active'));
         b.classList.add('active');
-        const mode = b.dataset.mode;
-        if (mode === 'batch') {
-          singleView.classList.add('hidden');
-          batchView.classList.add('active');
-        } else {
-          singleView.classList.remove('hidden');
-          batchView.classList.remove('active');
-        }
+        switchMode(b.dataset.mode);
       });
     });
+
+    function switchMode(mode) {
+      singleView.classList.remove('hidden');
+      batchView.classList.remove('active');
+      libraryView.classList.remove('active');
+      if (mode === 'batch') {
+        singleView.classList.add('hidden');
+        batchView.classList.add('active');
+      } else if (mode === 'library') {
+        singleView.classList.add('hidden');
+        libraryView.classList.add('active');
+        loadLibrary();
+      }
+    }
 
     /* ---------- Batch state ---------- */
     let batchSize = '1024x1024';
@@ -1119,6 +1371,7 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               prompt: item.description,
+              concept: item.concept,
               size: batchSize,
               quality: batchQuality,
               style: currentStyle,
@@ -1143,6 +1396,7 @@
 
       batchStatusText.textContent = `Done. ${success}/${total} generated${success < total ? ` (${total - success} failed)` : ''}.`;
       refreshDownloadAll();
+      if (success > 0) invalidateLibrary();
       batchGenerateBtn.disabled = false;
       batchBtnLabel.textContent = 'Ideate & generate';
     }
@@ -1168,6 +1422,197 @@
       return collected;
     }
 
+    /* ---------- Library ---------- */
+    const librarySearch = $('librarySearch');
+    const libraryFilters = $('libraryFilters');
+    const libraryCount = $('libraryCount');
+    const libraryGridWrap = $('libraryGridWrap');
+    const modal = $('modal');
+    const modalImage = $('modalImage');
+    const modalConcept = $('modalConcept');
+    const modalDesc = $('modalDesc');
+    const modalTags = $('modalTags');
+    const modalDownload = $('modalDownload');
+    const modalCopy = $('modalCopy');
+    const modalRegen = $('modalRegen');
+    const modalClose = $('modalClose');
+
+    let libraryAssets = [];
+    let libraryFilter = 'all';
+    let libraryQuery = '';
+    let libraryLoaded = false;
+    let libraryLoading = false;
+    let currentModalAsset = null;
+
+    async function loadLibrary(force = false) {
+      if (libraryLoading) return;
+      if (libraryLoaded && !force) return;
+      libraryLoading = true;
+      libraryGridWrap.innerHTML = `
+        <div class="library-empty">
+          <div class="emoji">⏳</div>
+          <div>Loading library…</div>
+        </div>`;
+      try {
+        const res = await fetch('/api/library');
+        const data = await res.json();
+        libraryAssets = data.assets || [];
+        libraryLoaded = true;
+        if (data.warning) {
+          libraryGridWrap.innerHTML = `
+            <div class="library-empty">
+              <div class="emoji">📦</div>
+              <div><strong>Library not connected yet</strong></div>
+              <div style="margin-top:8px; font-size:13px;">${escapeHtml(data.warning)}</div>
+            </div>`;
+          libraryCount.textContent = '';
+          return;
+        }
+        renderLibrary();
+      } catch (err) {
+        libraryGridWrap.innerHTML = `
+          <div class="library-empty">
+            <div class="emoji">⚠️</div>
+            <div>Failed to load: ${escapeHtml(err.message)}</div>
+          </div>`;
+      } finally {
+        libraryLoading = false;
+      }
+    }
+
+    function renderLibrary() {
+      const q = libraryQuery.trim().toLowerCase();
+      const filtered = libraryAssets.filter((a) => {
+        if (libraryFilter !== 'all' && a.style !== libraryFilter) return false;
+        if (!q) return true;
+        return (
+          (a.concept || '').toLowerCase().includes(q) ||
+          (a.description || '').toLowerCase().includes(q) ||
+          (a.style || '').toLowerCase().includes(q)
+        );
+      });
+
+      libraryCount.textContent = `${filtered.length} of ${libraryAssets.length}`;
+
+      if (libraryAssets.length === 0) {
+        libraryGridWrap.innerHTML = `
+          <div class="library-empty">
+            <div class="emoji">✨</div>
+            <div><strong>No assets yet</strong></div>
+            <div style="margin-top:8px; font-size:13px;">Generate something — it'll appear here automatically.</div>
+          </div>`;
+        return;
+      }
+      if (filtered.length === 0) {
+        libraryGridWrap.innerHTML = `
+          <div class="library-empty">
+            <div class="emoji">🔍</div>
+            <div>No matches for &ldquo;${escapeHtml(libraryQuery)}&rdquo;.</div>
+          </div>`;
+        return;
+      }
+
+      libraryGridWrap.innerHTML = `<div class="library-grid">${filtered
+        .map(
+          (a) => `
+          <div class="library-tile checker" data-id="${a.id}">
+            <img src="${a.imageUrl}" alt="${escapeHtml(a.concept)}" loading="lazy" />
+            <div class="style-badge">${escapeHtml(a.style || 'plastic')}</div>
+            <div class="tile-label">${escapeHtml(a.concept)}</div>
+          </div>`
+        )
+        .join('')}</div>`;
+
+      libraryGridWrap.querySelectorAll('.library-tile').forEach((el) => {
+        el.addEventListener('click', () => {
+          const asset = libraryAssets.find((a) => a.id === el.dataset.id);
+          if (asset) openModal(asset);
+        });
+      });
+    }
+
+    librarySearch.addEventListener('input', (e) => {
+      libraryQuery = e.target.value;
+      renderLibrary();
+    });
+
+    libraryFilters.addEventListener('click', (e) => {
+      const btn = e.target.closest('.filter-chip');
+      if (!btn) return;
+      libraryFilters.querySelectorAll('.filter-chip').forEach((c) => c.classList.remove('active'));
+      btn.classList.add('active');
+      libraryFilter = btn.dataset.filter;
+      renderLibrary();
+    });
+
+    /* Modal */
+    function openModal(asset) {
+      currentModalAsset = asset;
+      modalImage.innerHTML = `<img src="${asset.imageUrl}" alt="${escapeHtml(asset.concept)}" />`;
+      modalConcept.textContent = asset.concept;
+      modalDesc.textContent = asset.description || '';
+      modalTags.innerHTML = [
+        asset.style ? `<span class="modal-tag">${escapeHtml(asset.style)}</span>` : '',
+        asset.size ? `<span class="modal-tag">${escapeHtml(asset.size)}</span>` : '',
+        asset.quality ? `<span class="modal-tag">${escapeHtml(asset.quality)}</span>` : '',
+      ].join('');
+      modal.classList.add('active');
+    }
+    function closeModal() { modal.classList.remove('active'); currentModalAsset = null; }
+    modalClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+    modalDownload.addEventListener('click', async () => {
+      if (!currentModalAsset) return;
+      try {
+        const r = await fetch(currentModalAsset.imageUrl);
+        const blob = await r.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `wabi3d-${currentModalAsset.slug || 'asset'}.png`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      } catch (err) {
+        console.warn('download failed', err);
+      }
+    });
+
+    modalCopy.addEventListener('click', async () => {
+      if (!currentModalAsset) return;
+      try {
+        const r = await fetch(currentModalAsset.imageUrl);
+        const blob = await r.blob();
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        modalCopy.textContent = 'Copied!';
+        setTimeout(() => (modalCopy.textContent = 'Copy image'), 900);
+      } catch (e) {
+        console.warn('copy failed', e);
+      }
+    });
+
+    modalRegen.addEventListener('click', () => {
+      if (!currentModalAsset) return;
+      // Switch to single mode, fill prompt + style, then close modal.
+      promptEl.value = currentModalAsset.concept;
+      // Set style to match asset
+      styleButtons.forEach((b) => {
+        if (b.dataset.style === currentModalAsset.style) b.click();
+      });
+      // Switch to single mode
+      modeButtons.forEach((b) => {
+        if (b.dataset.mode === 'single') b.click();
+      });
+      closeModal();
+      promptEl.focus();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    function invalidateLibrary() { libraryLoaded = false; }
+
+    /* ---------- Download all (zip) ---------- */
     downloadAllBtn.addEventListener('click', async () => {
       if (typeof JSZip === 'undefined') {
         batchErrorBox.innerHTML = `<div class="error">JSZip failed to load. Check your connection and try again.</div>`;

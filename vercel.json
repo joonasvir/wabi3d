@@ -8,6 +8,9 @@
     },
     "api/ideate.js": {
       "maxDuration": 30
+    },
+    "api/library.js": {
+      "maxDuration": 30
     }
   }
 }
