@@ -371,6 +371,120 @@
       margin-right: 2px;
     }
 
+    /* Prompt template (advanced) */
+    .prompt-panel {
+      background: var(--panel);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-soft);
+      margin: 0 0 20px;
+      overflow: hidden;
+    }
+    .prompt-panel-summary {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+    }
+    .prompt-panel-summary::-webkit-details-marker { display: none; }
+    .prompt-panel-summary .caret {
+      width: 14px; height: 14px;
+      transition: transform 0.15s ease;
+      color: var(--ink-soft);
+    }
+    .prompt-panel[open] .prompt-panel-summary .caret { transform: rotate(90deg); }
+    .prompt-panel-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .prompt-panel-hint {
+      font-size: 12px;
+      color: var(--ink-soft);
+      margin-left: auto;
+    }
+    .prompt-panel-body {
+      padding: 4px 18px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      border-top: 1px solid var(--line);
+    }
+    .prompt-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .prompt-field-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .prompt-field-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .prompt-field-sub {
+      font-size: 11px;
+      color: var(--ink-soft);
+    }
+    .prompt-field-reset {
+      font-family: inherit;
+      font-size: 11px;
+      color: var(--ink-soft);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+    }
+    .prompt-field-reset:hover:not(:disabled) {
+      background: #f1f1f1;
+      color: var(--ink);
+    }
+    .prompt-field-reset:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+    .prompt-field-reset.dirty {
+      color: #b54300;
+    }
+    .prompt-field textarea {
+      font-family: inherit;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--ink);
+      background: #f7f7f7;
+      border: 1px solid transparent;
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      width: 100%;
+      resize: vertical;
+      min-height: 80px;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .prompt-field textarea:focus {
+      outline: none;
+      border-color: #111;
+      background: #fff;
+    }
+    .prompt-field textarea.tall { min-height: 160px; }
+    .prompt-panel-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #b54300;
+      display: none;
+    }
+    .prompt-panel-dot.active { display: inline-block; }
+
     /* Batch view */
     .batch-view { display: none; }
     .batch-view.active { display: block; }
@@ -815,6 +929,52 @@
       </div>
     </div>
 
+    <details class="prompt-panel" id="promptPanel">
+      <summary class="prompt-panel-summary">
+        <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        <span class="prompt-panel-title">Prompt template</span>
+        <span class="prompt-panel-dot" id="promptPanelDot" title="You have unsaved overrides"></span>
+        <span class="prompt-panel-hint" id="promptPanelHint">View & edit the prompts sent to the model</span>
+      </summary>
+      <div class="prompt-panel-body">
+        <div class="prompt-field">
+          <div class="prompt-field-head">
+            <div>
+              <span class="prompt-field-label">Style preamble</span>
+              <span class="prompt-field-sub" id="preambleStyleLabel">— Plastic</span>
+            </div>
+            <button type="button" class="prompt-field-reset" data-reset="preamble">Reset</button>
+          </div>
+          <textarea id="promptPreamble" class="tall" spellcheck="false" placeholder="Loading defaults…"></textarea>
+          <div class="prompt-field-sub">Appended to every image-generation prompt after the subject.</div>
+        </div>
+
+        <div class="prompt-field">
+          <div class="prompt-field-head">
+            <div>
+              <span class="prompt-field-label">Negative prompt</span>
+              <span class="prompt-field-sub">— shared across styles</span>
+            </div>
+            <button type="button" class="prompt-field-reset" data-reset="negative">Reset</button>
+          </div>
+          <textarea id="promptNegative" spellcheck="false" placeholder="Loading defaults…"></textarea>
+          <div class="prompt-field-sub">Things the model should avoid (text, scenes, multiple objects, etc.).</div>
+        </div>
+
+        <div class="prompt-field">
+          <div class="prompt-field-head">
+            <div>
+              <span class="prompt-field-label">Ideation system prompt</span>
+              <span class="prompt-field-sub" id="systemStyleLabel">— Plastic (used in Batch mode)</span>
+            </div>
+            <button type="button" class="prompt-field-reset" data-reset="system">Reset</button>
+          </div>
+          <textarea id="promptSystem" class="tall" spellcheck="false" placeholder="Loading defaults…"></textarea>
+          <div class="prompt-field-sub">Tells the LLM how to turn each concept into a visual description before it goes to the image model.</div>
+        </div>
+      </div>
+    </details>
+
     <section class="batch-view" id="batchView">
       <div class="batch-bar">
         <div class="field">
@@ -1030,8 +1190,131 @@
         promptEl.placeholder = PLACEHOLDERS[currentStyle];
         batchPrompt.placeholder = BATCH_PLACEHOLDERS[currentStyle];
         renderSuggestions();
+        renderPromptPanel();
       });
     });
+
+    /* ---------- Prompt template panel ---------- */
+    const promptPanel = $('promptPanel');
+    const promptPanelDot = $('promptPanelDot');
+    const promptPanelHint = $('promptPanelHint');
+    const promptPreamble = $('promptPreamble');
+    const promptNegative = $('promptNegative');
+    const promptSystem = $('promptSystem');
+    const preambleStyleLabel = $('preambleStyleLabel');
+    const systemStyleLabel = $('systemStyleLabel');
+
+    const LS_KEY = 'wabi3d.promptOverrides.v1';
+    let promptDefaults = null; // { stylePreamble: { plastic, glass }, negative, ideateSystem: { plastic, glass } }
+    let promptOverrides = loadOverrides();
+
+    function loadOverrides() {
+      try {
+        const raw = localStorage.getItem(LS_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+    function saveOverrides() {
+      try { localStorage.setItem(LS_KEY, JSON.stringify(promptOverrides)); } catch (e) {}
+    }
+
+    // Reads the effective value (override if set, else default).
+    function effectivePreamble(style) {
+      return promptOverrides[`preamble.${style}`] ?? promptDefaults?.stylePreamble?.[style] ?? '';
+    }
+    function effectiveSystem(style) {
+      return promptOverrides[`system.${style}`] ?? promptDefaults?.ideateSystem?.[style] ?? '';
+    }
+    function effectiveNegative() {
+      return promptOverrides['negative'] ?? promptDefaults?.negative ?? '';
+    }
+
+    function isDirty(key) {
+      return Object.prototype.hasOwnProperty.call(promptOverrides, key);
+    }
+    function updateDirtyIndicators() {
+      const anyDirty = Object.keys(promptOverrides).length > 0;
+      promptPanelDot.classList.toggle('active', anyDirty);
+      promptPanelHint.textContent = anyDirty
+        ? 'Custom overrides active'
+        : 'View & edit the prompts sent to the model';
+
+      const resetBtn = (key) => document.querySelector(`.prompt-field-reset[data-reset="${key}"]`);
+      const setBtn = (btn, dirty) => {
+        if (!btn) return;
+        btn.disabled = !dirty;
+        btn.classList.toggle('dirty', dirty);
+      };
+      setBtn(resetBtn('preamble'), isDirty(`preamble.${currentStyle}`));
+      setBtn(resetBtn('system'), isDirty(`system.${currentStyle}`));
+      setBtn(resetBtn('negative'), isDirty('negative'));
+    }
+
+    function renderPromptPanel() {
+      if (!promptDefaults) return;
+      const styleName = currentStyle === 'glass' ? 'Glass' : 'Plastic';
+      preambleStyleLabel.textContent = `— ${styleName}`;
+      systemStyleLabel.textContent = `— ${styleName} (used in Batch mode)`;
+      // Set values without firing input events that would re-save.
+      promptPreamble.value = effectivePreamble(currentStyle);
+      promptNegative.value = effectiveNegative();
+      promptSystem.value = effectiveSystem(currentStyle);
+      updateDirtyIndicators();
+    }
+
+    function handleEdit(field, value) {
+      let key;
+      if (field === 'preamble') key = `preamble.${currentStyle}`;
+      else if (field === 'system') key = `system.${currentStyle}`;
+      else if (field === 'negative') key = 'negative';
+      else return;
+
+      const defaultVal =
+        field === 'preamble' ? promptDefaults?.stylePreamble?.[currentStyle] :
+        field === 'system' ? promptDefaults?.ideateSystem?.[currentStyle] :
+        promptDefaults?.negative;
+
+      if (value === defaultVal) {
+        delete promptOverrides[key];
+      } else {
+        promptOverrides[key] = value;
+      }
+      saveOverrides();
+      updateDirtyIndicators();
+    }
+
+    promptPreamble.addEventListener('input', (e) => handleEdit('preamble', e.target.value));
+    promptNegative.addEventListener('input', (e) => handleEdit('negative', e.target.value));
+    promptSystem.addEventListener('input', (e) => handleEdit('system', e.target.value));
+
+    document.querySelectorAll('.prompt-field-reset').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const field = btn.dataset.reset;
+        const key =
+          field === 'preamble' ? `preamble.${currentStyle}` :
+          field === 'system' ? `system.${currentStyle}` :
+          'negative';
+        delete promptOverrides[key];
+        saveOverrides();
+        renderPromptPanel();
+      });
+    });
+
+    async function loadPromptDefaults() {
+      try {
+        const res = await fetch('/api/prompts');
+        const data = await res.json();
+        if (data?.success) {
+          promptDefaults = data.defaults;
+          renderPromptPanel();
+        }
+      } catch (e) {
+        console.warn('Failed to load prompt defaults', e);
+      }
+    }
+    loadPromptDefaults();
 
     // Cmd/Ctrl+Enter to generate
     promptEl.addEventListener('keydown', (e) => {
@@ -1066,7 +1349,14 @@
         const res = await fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt, size: currentSize, quality: currentQuality, style: currentStyle }),
+          body: JSON.stringify({
+            prompt,
+            size: currentSize,
+            quality: currentQuality,
+            style: currentStyle,
+            stylePreamble: effectivePreamble(currentStyle),
+            negative: effectiveNegative(),
+          }),
         });
         const data = await res.json();
         if (!res.ok || !data.success) {
@@ -1334,7 +1624,11 @@
         const res = await fetch('/api/ideate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ concepts, style: currentStyle }),
+          body: JSON.stringify({
+            concepts,
+            style: currentStyle,
+            ideateSystem: effectiveSystem(currentStyle),
+          }),
         });
         const data = await res.json();
         if (!res.ok || !data.success) throw new Error(data.error || 'Ideation failed');
@@ -1375,6 +1669,8 @@
               size: batchSize,
               quality: batchQuality,
               style: currentStyle,
+              stylePreamble: effectivePreamble(currentStyle),
+              negative: effectiveNegative(),
             }),
           });
           const data = await res.json();
